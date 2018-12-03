@@ -1,2 +1,2 @@
 # Thread
-Testing SDL Threading
+Testing std::thread
