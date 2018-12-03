@@ -28,7 +28,7 @@ namespace Threads
 		~ThreadPool();
 
 		template<class T>
-		auto enqueue(T _task)->std::future<decltype(_task())>
+		auto enqueue(T _task)->std::shared_future<decltype(_task())>
 		{
 			// contain a shared pointer to an abstract function
 			auto wrapper = std::make_shared<std::packaged_task<decltype(_task()) ()>>(std::move(_task));
@@ -46,12 +46,12 @@ namespace Threads
 			m_futures.push_back(wrapper->get_future());
 			// notify all 
 			m_poolConditionalEvent.notify_all();
-			return wrapper->get_future();
+			return m_futures.back();
 		}
 
 		// check if a future is ready
 		template<typename T>
-		bool isReady(std::future<T> const &_future)
+		bool isReady(std::shared_future<T> const &_future)
 		{
 			if (_future.valid())
 			{
@@ -79,7 +79,7 @@ namespace Threads
 		void stop();
 
 		std::queue<Task> m_tasks;
-		std::vector<std::future<ThreadData>> m_futures;
+		std::vector<std::shared_future<ThreadData>> m_futures;
 
 		std::vector<std::thread> m_threads;
 

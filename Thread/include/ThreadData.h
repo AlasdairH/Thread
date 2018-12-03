@@ -14,6 +14,7 @@ namespace Threads
 	{
 		float startTime;
 		float endTime;
+		float duration;
 		
 		float resultFloat;
 	};

@@ -158,6 +158,7 @@
     <ClInclude Include="include\Logger.h" />
     <ClInclude Include="include\ThreadData.h" />
     <ClInclude Include="include\ThreadPool.h" />
+    <ClInclude Include="include\Timer.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

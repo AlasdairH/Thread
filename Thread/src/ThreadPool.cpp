@@ -5,24 +5,40 @@ namespace Threads
 
 	ThreadPool::ThreadPool(const int _numThreads)
 	{
+		// start the thread pool with the specified number of threads
 		start(_numThreads);
 	}
 
 	ThreadPool::~ThreadPool()
 	{
+		// stop the thread pool
 		stop();
 	}
 
 	std::vector<ThreadData> ThreadPool::pullCompletedThreads()
 	{
 		std::vector<ThreadData> completedThreads;
-		for (auto &future : m_futures)
+		std::vector<unsigned int> indicesToRemove;
+
+		// loop through all the current futures and find any that are ready
+		for (unsigned int i = 0; i < m_futures.size(); ++i)
 		{
-			if (isReady(future))
+			if (isReady(m_futures[i]))
 			{
-				completedThreads.push_back(future.get());
+				// if the future is complete then add it to the data to send back
+				completedThreads.push_back(m_futures[i].get());
+				indicesToRemove.push_back(i);
 			}
 		}
+
+		// reverse the vector of indices to remove as not to disrupt the order of the vector when removing
+		std::reverse(indicesToRemove.begin(), indicesToRemove.end());
+		for (unsigned int i = 0; i < indicesToRemove.size(); ++i)
+		{
+			m_futures.erase(m_futures.begin() + indicesToRemove[i]);
+		}
+
+		// return the completed thread data
 		return completedThreads;
 	}
 
@@ -36,6 +52,7 @@ namespace Threads
 				// This code is run per thread
 				while (true)
 				{
+					// a blank task
 					Task task;
 
 					// scope for mutex. We do not want the mutex locked while the task is running. It could be a while.
