@@ -7,21 +7,20 @@
 
 #undef main
 
-Threads::ThreadData threadedFunc()
+float threadedFunc()
 {
 	Timer time;
-	Threads::ThreadData data;
 
 	std::this_thread::sleep_for(std::chrono::seconds(1));
-	data.resultFloat = 1.1f;
-	
-	data.duration = time.getDuration();
-	return data;
+
+	return time.getDuration();
 }
 
 int main()
 {
 	Threads::ThreadPool threadPool;
+	std::vector<std::future<float>> threadFutures;
+	std::vector<float> resultFloats;
 	// add 10 jobs to the thread queue
 	for (int i = 0; i < 10; ++i)
 	{
@@ -31,26 +30,22 @@ int main()
 		});
 	}
 
-	std::vector<float> floats;
+	
 
 	bool looping = true;
 	while (looping)
 	{
-		std::vector<Threads::ThreadData> data;
-		data = threadPool.pullCompletedThreads();
-		if (data.size() > 0)
+		for (unsigned int i = 0; i < threadFutures.size(); ++i)
 		{
-			LOG_MESSAGE("Thread Data Found");
-
-			for (unsigned int i = 0; i < data.size(); ++i)
+			if (threadFutures[i].valid())
 			{
-				floats.push_back(data[i].duration);
+				if (threadPool.isReady(threadFutures[i]))
+				{
+					resultFloats.push_back(threadFutures[i].get());
+					LOG_MESSAGE("Thread is complete, result: " << resultFloats.back());
+				}
 			}
-		}
 
-		if (floats.size() >= 10)
-		{
-			looping = false;
 		}
 	}
 

@@ -12,7 +12,6 @@
 
 // program
 #include "Logger.h"
-#include "ThreadData.h"
 
 
 namespace Threads
@@ -58,7 +57,8 @@ namespace Threads
 			auto wrapper = std::make_shared<std::packaged_task<decltype(_task()) ()>>(std::move(_task));
 			// scope for mutex lock
 			{
-				std::unique_lock<std::mutex> lock(m_eventMutex);
+				// lock the 
+				std::unique_lock<std::mutex> lock(m_queueProtectionMutex);
 
 				// emplace back a new task to the queue
 				m_tasks.emplace([=]
@@ -67,10 +67,9 @@ namespace Threads
 				});
 			}
 			// add the future of this task to the vector of futures
-			m_futures.push_back(wrapper->get_future());
 			// notify all 
 			m_poolConditionalEvent.notify_all();
-			return m_futures.back();
+			return wrapper->get_future();
 		}
 
 		/** @brief Takes a future and tests to see if the task it is associated with has finished
@@ -100,13 +99,6 @@ namespace Threads
 			}
 		}
 
-		/** @brief Checks the pool's futures for any completed tasks and returns a vector of the completed tasks
-		*
-		*	Looks through all the futures of the thread pool to check if any have been completed and then returns the data from those
-		*	completed tasks
-		*/
-		std::vector<ThreadData> pullCompletedThreads();
-
 	protected:
 		/** @brief Starts the thread pool. Called by constructor.
 		*	@param _numThreads The number of threads to start the pool with
@@ -123,12 +115,11 @@ namespace Threads
 		void stop();
 
 		std::queue<Task>								m_tasks;					/**< The queue to tasks to be executed */
-		std::vector<std::shared_future<ThreadData>>		m_futures;					/**< The vector of futures both complete and incomplete */
 
 		std::vector<std::thread>						m_threads;					/**< Vector of all worker threads */
 
 		std::condition_variable							m_poolConditionalEvent;		/**< The thread pool conditional event that holds threads before they get a job */
-		std::mutex										m_eventMutex;				/**< The mutex which controlls access to the task queue */
+		std::mutex										m_queueProtectionMutex;		/**< The mutex which controlls access to the task queue */
 		bool											m_stopping = false;			/**< A flag for the state of the thread pool, if set to true the pool will stop */
 
 	};
