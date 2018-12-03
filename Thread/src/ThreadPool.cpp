@@ -3,6 +3,11 @@
 namespace Threads
 {
 
+	ThreadPool::ThreadPool()
+	{
+		start(std::thread::hardware_concurrency());
+	}
+
 	ThreadPool::ThreadPool(const int _numThreads)
 	{
 		// start the thread pool with the specified number of threads

@@ -14,19 +14,43 @@
 #include "Logger.h"
 #include "ThreadData.h"
 
-// TODO: Doxygen
-
 
 namespace Threads
 {
+	/*! @class ThreadPool
+	*	@brief A Thread Pool that can be assisnged jobs through lambas or function pointers
+	*
+	*	Creates a threadpool with a specified number of threads. Jobs can be enqueued to the pool and will be assigned a worker thread
+	*	as soon as one is available. 
+	*/
 	class ThreadPool
 	{
 	public:
 		using Task = std::function<void()>;
 
+		/** @brief ThreadPool Constructor
+		*
+		*	Creates a threadpool with a thread for every CPU core on the system
+		*/
+		ThreadPool();
+		/** @brief ThreadPool Constructor
+		*	@param _numThreads The number of worker threads to create
+		*
+		*	Creates a thread pool with the specified number of threads
+		*/
 		ThreadPool(const int _numThreads);
+
+		/** @brief ThreadPool Deconstructor
+		*
+		*	Waits for all work to be done on each core and then stops each thread
+		*/
 		~ThreadPool();
 
+		/** @brief Enqueues a task to the thread pool 
+		*	@param _task The task to be queued to the pool
+		*
+		*	Adds a task to the pool to be executed when there is a free worker thread
+		*/
 		template<class T>
 		auto enqueue(T _task)->std::shared_future<decltype(_task())>
 		{
@@ -49,7 +73,11 @@ namespace Threads
 			return m_futures.back();
 		}
 
-		// check if a future is ready
+		/** @brief Takes a future and tests to see if the task it is associated with has finished
+		*	@param _future The future to test
+		*
+		*	Takes a future and tesks to see if the future has completed execution and the result can be extracted.
+		*/
 		template<typename T>
 		bool isReady(std::shared_future<T> const &_future)
 		{
@@ -72,20 +100,36 @@ namespace Threads
 			}
 		}
 
+		/** @brief Checks the pool's futures for any completed tasks and returns a vector of the completed tasks
+		*
+		*	Looks through all the futures of the thread pool to check if any have been completed and then returns the data from those
+		*	completed tasks
+		*/
 		std::vector<ThreadData> pullCompletedThreads();
 
 	protected:
+		/** @brief Starts the thread pool. Called by constructor.
+		*	@param _numThreads The number of threads to start the pool with
+		*
+		*	Starts the thread pool with the specified number of threads.
+		*	This method is called on construction of the ThreadPool.
+		*/
 		void start(const int _numThreads);
+
+		/** @brief Stops the thread pool
+		*
+		*	Waits for execution of tasks to complete and then shuts down all threads.
+		*/
 		void stop();
 
-		std::queue<Task> m_tasks;
-		std::vector<std::shared_future<ThreadData>> m_futures;
+		std::queue<Task>								m_tasks;					/**< The queue to tasks to be executed */
+		std::vector<std::shared_future<ThreadData>>		m_futures;					/**< The vector of futures both complete and incomplete */
 
-		std::vector<std::thread> m_threads;
+		std::vector<std::thread>						m_threads;					/**< Vector of all worker threads */
 
-		std::condition_variable m_poolConditionalEvent;
-		std::mutex m_eventMutex;
-		bool m_stopping = false;					// under the protection of m_eventMutex
+		std::condition_variable							m_poolConditionalEvent;		/**< The thread pool conditional event that holds threads before they get a job */
+		std::mutex										m_eventMutex;				/**< The mutex which controlls access to the task queue */
+		bool											m_stopping = false;			/**< A flag for the state of the thread pool, if set to true the pool will stop */
 
 	};
 }

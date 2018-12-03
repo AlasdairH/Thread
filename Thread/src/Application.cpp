@@ -21,7 +21,7 @@ Threads::ThreadData threadedFunc()
 
 int main()
 {
-	Threads::ThreadPool threadPool(std::thread::hardware_concurrency());
+	Threads::ThreadPool threadPool;
 	// add 10 jobs to the thread queue
 	for (int i = 0; i < 10; ++i)
 	{
