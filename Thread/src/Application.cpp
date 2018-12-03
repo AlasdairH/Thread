@@ -7,27 +7,38 @@
 
 #undef main
 
-float threadedFunc()
+int random(const int _min, const int _max)
+{
+	return _min + (rand() % static_cast<int>(_max - _min + 1));
+}
+
+float threadedFunc(int _secondsToWait)
 {
 	Timer time;
-
-	std::this_thread::sleep_for(std::chrono::seconds(1));
-
+	std::this_thread::sleep_for(std::chrono::seconds(_secondsToWait));
 	return time.getDuration();
 }
 
 int main()
 {
+	srand(time(NULL));
+
 	Threads::ThreadPool threadPool;
+
 	std::vector<std::future<float>> threadFutures;
 	std::vector<float> resultFloats;
+
 	// add 10 jobs to the thread queue
-	for (int i = 0; i < 10; ++i)
+	for (int i = 1; i < 10; ++i)
 	{
+		int randWait = random(1, 5);
+
+		threadFutures.push_back(
 		threadPool.enqueue([=]
 		{
-			return threadedFunc();
-		});
+			return threadedFunc(randWait);
+		})
+		);
 	}
 
 	
@@ -45,7 +56,6 @@ int main()
 					LOG_MESSAGE("Thread is complete, result: " << resultFloats.back());
 				}
 			}
-
 		}
 	}
 

@@ -51,7 +51,7 @@ namespace Threads
 		*	Adds a task to the pool to be executed when there is a free worker thread
 		*/
 		template<class T>
-		auto enqueue(T _task)->std::shared_future<decltype(_task())>
+		auto enqueue(T _task)->std::future<decltype(_task())>
 		{
 			// contain a shared pointer to an abstract function
 			auto wrapper = std::make_shared<std::packaged_task<decltype(_task()) ()>>(std::move(_task));
@@ -78,7 +78,7 @@ namespace Threads
 		*	Takes a future and tesks to see if the future has completed execution and the result can be extracted.
 		*/
 		template<typename T>
-		bool isReady(std::shared_future<T> const &_future)
+		bool isReady(std::future<T> const &_future)
 		{
 			if (_future.valid())
 			{
