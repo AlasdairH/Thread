@@ -43,7 +43,8 @@ namespace Threads
 						// the lock is created around the event mutex
 						std::unique_lock<std::mutex> lock(m_eventMutex);
 
-						// this thread should wait for either stopping or wait if there are no tasks to complete
+						// wait unlocks the mutex and waits for the conditional event to be notified AND for the predicate to be true
+						// waits for the thread pool to stop OR for a new task to be added to the pool
 						m_poolConditionalEvent.wait(lock, [=] { return m_stopping || !m_tasks.empty(); });
 
 						// if the thread pool is stopping and there is no tasks then break out of the while loop
